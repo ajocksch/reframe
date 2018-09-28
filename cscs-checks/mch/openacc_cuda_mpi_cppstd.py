@@ -10,7 +10,8 @@ class OpenaccCudaCpp(rfm.RegressionTest):
         self.name = 'OpenaccCudaCPP' + name_suffix
         self.descr = 'test for OpenACC, CUDA, MPI, and C++'
         self.valid_systems = ['daint:gpu', 'dom:gpu', 'kesch:cn']
-        self.valid_prog_environs = ['PrgEnv-cray*', 'PrgEnv-pgi*']
+        self.valid_prog_environs = ['PrgEnv-cray', 'PrgEnv-pgi']
+        self.build_system = 'Make'
         if self.current_system.name in ['daint', 'dom']:
             self.modules = ['craype-accel-nvidia60']
             self._pgi_flags = '-O2 -acc -ta=tesla:cc60 -Mnorpath -lstdc++'
@@ -36,7 +37,7 @@ class OpenaccCudaCpp(rfm.RegressionTest):
             self._nvidia_sm = '37'
 
         if withmpi:
-            self.mpiflag = ' -DUSE_MPI'
+            self.mpiflag = '-DUSE_MPI'
         else:
             self.mpiflag = ''
             self.num_tasks = 1
@@ -50,12 +51,14 @@ class OpenaccCudaCpp(rfm.RegressionTest):
 
     def setup(self, partition, environ, **job_opts):
         # Set nvcc flags
-        environ.cxxflags = '-lcublas -lcudart -arch=sm_%s' % self._nvidia_sm
+        self.build_system.cxxflags = (
+            ['-lcublas -lcudart -arch=sm_%s' % self._nvidia_sm]
+        )
         if environ.name.startswith('PrgEnv-cray'):
-            environ.fflags = '-O2 -hacc -hnoomp'
+            self.build_system.fflags = ['-O2 -hacc -hnoomp']
         elif environ.name.startswith('PrgEnv-pgi'):
-            environ.fflags = self._pgi_flags
+            self.build_system.fflags = [self._pgi_flags]
 
         self.variables = self._env_variables
-        environ.fflags += self.mpiflag
+        self.build_system.fflags += [self.mpiflag]
         super().setup(partition, environ, **job_opts)

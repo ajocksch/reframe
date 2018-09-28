@@ -7,7 +7,7 @@ class AutomaticArraysCheck(rfm.RegressionTest):
     def __init__(self, **kwargs):
         super().__init__()
         self.valid_systems = ['daint:gpu', 'dom:gpu', 'kesch:cn']
-        self.valid_prog_environs = ['PrgEnv-cray*', 'PrgEnv-pgi*',
+        self.valid_prog_environs = ['PrgEnv-cray', 'PrgEnv-pgi',
                                     'PrgEnv-gnu']
         if self.current_system.name in ['daint', 'dom']:
             self.modules = ['craype-accel-nvidia60']
@@ -22,6 +22,7 @@ class AutomaticArraysCheck(rfm.RegressionTest):
         self.num_gpus_per_node = 1
         self.num_tasks_per_node = 1
         self.sourcepath = 'automatic_arrays.f90'
+        self.build_system = 'SingleSource'
         self.sanity_patterns = sn.assert_found(r'Result: ', self.stdout)
         self.perf_patterns = {
             'perf': sn.extractsingle(r'Timing:\s+(?P<perf>\S+)',
@@ -51,14 +52,14 @@ class AutomaticArraysCheck(rfm.RegressionTest):
 
     def setup(self, partition, environ, **job_opts):
         if environ.name.startswith('PrgEnv-cray'):
-            environ.fflags = '-O2 -hacc -hnoomp'
+            self.build_system.fflags = ['-O2 -hacc -hnoomp']
             key = 'PrgEnv-cray'
             self.variables = self._cray_variables
         elif environ.name.startswith('PrgEnv-pgi'):
-            environ.fflags = self._pgi_flags
+            self.build_system.fflags = [self._pgi_flags]
             key = 'PrgEnv-pgi'
         elif environ.name.startswith('PrgEnv-gnu'):
-            environ.fflags = '-O2'
+            self.build_system.fflags = ['-O2']
             key = 'PrgEnv-gnu'
 
         self.reference = self.arrays_reference[key]
