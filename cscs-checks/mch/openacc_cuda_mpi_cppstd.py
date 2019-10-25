@@ -15,7 +15,7 @@ class OpenaccCudaCpp(rfm.RegressionTest):
         self.build_system.fflags = ['-O2']
 
         if self.current_system.name in ['daint', 'dom', 'tiger']:
-            self.modules = ['craype-accel-nvidia60']
+            self.modules = ['craype-accel-nvidia60', 'cudatoolkit/9.2.148_3.19-6.0.7.1_2.1__g3d9acc8', 'GCCcore/7-cuda-9.2-offload']
             self.num_tasks = 12
             self.num_tasks_per_node = 12
             self.num_gpus_per_node = 1
@@ -124,5 +124,6 @@ class OpenaccCudaCpp(rfm.RegressionTest):
                 self.build_system.ldflags += [
                     '-L/cm/shared/apps/cuda10.0/toolkit/10.0.130/lib64']
             self.build_system.ldflags += ['-lcublas', '-lcudart']
+            self.build_system.ldflags += ['-dynamic', '-fopenacc']
 
         super().setup(partition, environ, **job_opts)

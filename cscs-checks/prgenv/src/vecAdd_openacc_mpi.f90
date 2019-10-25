@@ -43,12 +43,16 @@
       enddo
       sum = sum/n/isize
 
+      call MPI_Allreduce(MPI_IN_PLACE, sum, 1, MPI_REAL8, MPI_SUM, MPI_COMM_WORLD, ierr)
       if (irank.eq.0) then
-          call MPI_Reduce(MPI_IN_PLACE, sum, 1, MPI_REAL8, MPI_SUM, 0, MPI_COMM_WORLD, ierr)
           print *, 'final result: ', sum
-      else
-          call MPI_Reduce(sum, sum, 1, MPI_REAL8, MPI_SUM, 0, MPI_COMM_WORLD, ierr)
       end if
+!      if (irank.eq.0) then
+!          call MPI_Reduce(MPI_IN_PLACE, sum, 1, MPI_REAL8, MPI_SUM, 0, MPI_COMM_WORLD, ierr)
+!          print *, 'final result: ', sum
+!      else
+!          call MPI_Reduce(sum, sum, 1, MPI_REAL8, MPI_SUM, 0, MPI_COMM_WORLD, ierr)
+!      end if
    
       ! Release memory
       deallocate(a)

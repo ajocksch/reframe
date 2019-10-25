@@ -12,17 +12,19 @@ class OpenACCFortranCheck(rfm.RegressionTest):
             self.num_tasks = 2
 
         self.valid_systems = ['daint:gpu', 'dom:gpu', 'kesch:cn']
-        self.valid_prog_environs = ['PrgEnv-cray', 'PrgEnv-pgi']
+        self.valid_prog_environs = ['PrgEnv-cray', 'PrgEnv-pgi',
+                                    'PrgEnv-gnu']
         if self.num_tasks == 1:
             self.sourcepath = 'vecAdd_openacc.f90'
             if self.current_system.name == 'kesch':
                 self.valid_prog_environs = ['PrgEnv-cray-nompi',
-                                            'PrgEnv-pgi-nompi']
+                                            'PrgEnv-pgi-nompi',
+                                            'PrgEnv-gnu-nompi']
         else:
             self.sourcepath = 'vecAdd_openacc_mpi.f90'
 
         if self.current_system.name in ['daint', 'dom']:
-            self.modules = ['craype-accel-nvidia60']
+            self.modules = ['craype-accel-nvidia60', 'cudatoolkit/9.2.148_3.19-6.0.7.1_2.1__g3d9acc8', 'GCCcore/9-cuda-9.2-offload']
         elif self.current_system.name == 'kesch':
             self.exclusive_access = True
             self.variables = {
@@ -44,6 +46,8 @@ class OpenACCFortranCheck(rfm.RegressionTest):
     def setup(self, partition, environ, **job_opts):
         if environ.name.startswith('PrgEnv-cray'):
             self.build_system.fflags = ['-hacc', '-hnoomp']
+        elif environ.name.startswith('PrgEnv-gnu'):
+            self.build_system.fflags = ['-dynamic', '-fopenacc']
         elif environ.name.startswith('PrgEnv-pgi'):
             if self.current_system.name in ['daint', 'dom']:
                 self.build_system.fflags = ['-acc', '-ta=tesla:cc60']
